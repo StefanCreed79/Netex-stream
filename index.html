@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netex | Premium Cinema</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #ff0055; --secondary: #00e5ff; --bg: #050505; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Poppins', sans-serif; overflow-x: hidden; }
+        nav { position: fixed; top: 0; width: 100%; padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; z-index: 1000; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); box-sizing: border-box; }
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: bold; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.5)); }
+        .hero-container { position: relative; height: 80vh; width: 100%; overflow: hidden; display: flex; align-items: center; padding: 0 5%; }
+        .hero-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.5s ease; z-index: -1; }
+        .hero-slide.active { opacity: 1; }
+        .pan-img { width: 140%; height: 100%; background-size: cover; background-position: center; animation: panSide 30s linear infinite alternate; }
+        @keyframes panSide { 0% { transform: translateX(0); } 100% { transform: translateX(-20%); } }
+        .hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to right, rgba(0,0,0,0.8), transparent), linear-gradient(to top, var(--bg), transparent); }
+        .hero-content { z-index: 10; max-width: 600px; }
+        .hero-content h1 { font-family: 'Orbitron', sans-serif; font-size: 3rem; margin: 0; text-transform: uppercase; }
+        .btn { padding: 12px 25px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; margin-top: 20px; }
+        .btn-main { background: var(--secondary); color: black; box-shadow: 0 0 15px var(--secondary); }
+        .container { padding: 40px 5%; }
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
+        .movie-card { background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; transition: 0.4s; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
+        .movie-card:hover { border-color: var(--primary); transform: scale(1.05); }
+        .movie-card img { width: 100%; height: 240px; object-fit: cover; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; overflow-y: auto; padding: 50px 5%; }
+        .auth-box { background: #111; padding: 30px; border-radius: 15px; border: 1px solid var(--secondary); max-width: 400px; margin: 100px auto; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #222; color: white; border: 1px solid #444; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">NETEX</div>
+        <button class="btn btn-main" style="padding: 8px 15px; font-size: 0.7rem;" onclick="openAuth()">Sign In</button>
+    </nav>
+
+    <div class="hero-container" id="hero-container"></div>
+
+    <div class="container">
+        <h2 style="color: var(--secondary); font-family: 'Orbitron'; font-size: 1.2rem;">Trending Now</h2>
+        <div class="movie-grid" id="movie-grid"></div>
+    </div>
+
+    <div id="movieModal" class="modal">
+        <button class="btn" style="background:white; color:black;" onclick="closeModal()">← Back</button>
+        <div id="modal-content"></div>
+    </div>
+
+    <div id="authModal" class="modal">
+        <div class="auth-box">
+            <h2 style="color: var(--primary)">JOIN NETEX</h2>
+            <p>Login to watch and download</p>
+            <input type="email" placeholder="Email">
+            <input type="password" placeholder="Password">
+            <button class="btn btn-main" style="width:100%" onclick="login()">Enter Netex</button>
+            <p onclick="closeAuth()" style="cursor:pointer; margin-top:15px; font-size:0.8rem">Cancel</p>
+        </div>
+    </div>
+
+    <script>
+        const featured = [
+            { title: "INTERSTELLAR", desc: "The end of Earth is not the end of us.", img: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070" },
+            { title: "THE BATMAN", desc: "Vengeance has arrived in Gotham.", img: "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=2000" },
+            { title: "DUNE", desc: "Fear is the mind-killer.", img: "https://images.unsplash.com/photo-1506466010722-395aa2bef877?q=80&w=2000" }
+        ];
+
+        const movies = [
+            { title: "Inception", genre: "Sci-Fi", rating: "8.8", img: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1025", video: "https://www.youtube.com/embed/YoHD9XEInc0" },
+            { title: "The Dark Knight", genre: "Action", rating: "9.0", img: "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=1170", video: "https://www.youtube.com/embed/EXeTwQWrcwY" },
+            { title: "Cyberpunk", genre: "Anime", rating: "8.6", img: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?q=80&w=1170", video: "https://www.youtube.com/embed/LembwK716Wk" }
+        ];
+
+        let currentSlide = 0;
+        let userLoggedIn = false;
+
+        function initHero() {
+            const container = document.getElementById('hero-container');
+            container.innerHTML = featured.map((m, i) => `
+                <div class="hero-slide ${i === 0 ? 'active' : ''}">
+                    <div class="pan-img" style="background-image: url('${m.img}')"></div>
+                    <div class="hero-overlay"></div>
+                    <div class="hero-content">
+                        <h1>${m.title}</h1>
+                        <p>${m.desc}</p>
+                        <button class="btn btn-main" onclick="openAuth()">Play Now</button>
+                    </div>
+                </div>
+            `).join('');
+            setInterval(nextSlide, 6000);
+        }
+
+        function nextSlide() {
+            const slides = document.querySelectorAll('.hero-slide');
+            if(!slides.length) return;
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }
+
+        function loadGrid() {
+            document.getElementById('movie-grid').innerHTML = movies.map((m, i) => `
+                <div class="movie-card" onclick="openMovie(${i})">
+                    <img src="${m.img}">
+                    <div class="movie-info">
+                        <h3>${m.title}</h3>
+                        <span style="color:var(--secondary)">⭐ ${m.rating}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openMovie(i) {
+            const m = movies[i];
+            document.getElementById('modal-content').innerHTML = `
+                <div style="margin-top:20px;">
+                    <iframe width="100%" height="250px" src="${m.video}" frameborder="0" allowfullscreen style="border:2px solid var(--secondary); border-radius:10px;"></iframe>
+                    <h1 style="color:var(--secondary); font-family:'Orbitron'">${m.title}</h1>
+                    <button class="btn btn-main" onclick="restrictedAction()">Download Movie</button>
+                    <button class="btn" style="background:rgba(255,255,255,0.1); color:white; margin-left:10px;" onclick="restrictedAction()">+ Watchlist</button>
+                </div>
+            `;
+            document.getElementById('movieModal').style.display = 'block';
+        }
+
+        function restrictedAction() { if(!userLoggedIn) openAuth(); else alert("Starting Download..."); }
+        function openAuth() { document.getElementById('authModal').style.display = 'block'; }
+        function closeAuth() { document.getElementById('authModal').style.display = 'none'; }
+        function closeModal() { document.getElementById('movieModal').style.display = 'none'; }
+        function login() { userLoggedIn = true; closeAuth(); alert("Welcome to Netex, Boss!"); }
+
+        initHero();
+        loadGrid();
+    </script>
+</body>
+  </html>
